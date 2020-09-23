@@ -17,14 +17,14 @@ class Refresh extends StatefulWidget {
 
   Refresh(
       {this.child,
-      this.onBeginRefresh,
-      this.headerBeforeBuilder,
-      this.headerReadyBuilder,
-      this.headerLoadingBuilder,
-      this.headerCompleteBuilder,
-      this.headerLoadingOffset = 60.0,
-      this.needShowComplete = false,
-      Key key})
+        this.onBeginRefresh,
+        this.headerBeforeBuilder,
+        this.headerReadyBuilder,
+        this.headerLoadingBuilder,
+        this.headerCompleteBuilder,
+        this.headerLoadingOffset = 60.0,
+        this.needShowComplete = false,
+        Key key})
       : super(key: key);
 
   @override
@@ -261,7 +261,8 @@ class RefreshState extends State<Refresh> with SingleTickerProviderStateMixin {
     double width = 30;
     return Container(
       decoration: BoxDecoration(
-          boxShadow: [BoxShadow(color: Colors.black38, blurRadius: 15)]),
+          borderRadius: BorderRadius.circular(width * 0.5),
+          boxShadow: [BoxShadow(color: Colors.black38, blurRadius: 10)]),
       width: width,
       height: width,
       alignment: Alignment.center,
