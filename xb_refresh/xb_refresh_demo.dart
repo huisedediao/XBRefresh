@@ -32,7 +32,7 @@ class _XBRefreshDemoState extends State<XBRefreshDemo> {
             key: _refreshKey,
             needLoadMore: true,
             needRefresh: true,
-//            needShowHasMoreFooter: true,
+//            initRefresh: true,
 
             ///开始加载更多的回调
             onBeginLoadMore: () {

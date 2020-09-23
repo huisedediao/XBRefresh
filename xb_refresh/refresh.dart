@@ -36,8 +36,8 @@ class Refresh extends StatefulWidget {
 }
 
 class RefreshState extends State<Refresh> with SingleTickerProviderStateMixin {
-  LoadMoreHeaderBuilderVM _headerBuilderVM;
-  LoadMoreHeaderOffsetVM _headerOffsetVM;
+  RefreshHeaderBuilderVM _headerBuilderVM;
+  RefreshHeaderPositionVM _headerOffsetVM;
   bool _isUserAction = false;
   double _lastOffset = 0;
   bool _isInProcess = false;
@@ -51,14 +51,11 @@ class RefreshState extends State<Refresh> with SingleTickerProviderStateMixin {
       Future.delayed(
           widget.needShowComplete ? Duration(seconds: 1) : Duration.zero, () {
         _headerBuilderVM.on = RefreshOn.before;
+        if (_headerOffsetVM.top != -widget.headerLoadingOffset) {
+          _headerOffsetVM.top = -widget.headerLoadingOffset;
+        }
         _isCompleted = true;
-        if (_headerOffsetVM.offset != 0) {
-          _headerOffsetVM.offset = 0;
-        }
-        if (_lastOffset == 0 && _isUserAction == false) {
-          _isInProcess = false;
-          _isCompleted = false;
-        }
+        _endProcessIfPossible();
       });
     }
   }
@@ -85,7 +82,11 @@ class RefreshState extends State<Refresh> with SingleTickerProviderStateMixin {
       if (fitOffset <= 0) {
         return;
       }
-      _headerOffsetVM.offset = fitOffset;
+      double top = -widget.headerLoadingOffset + fitOffset;
+      if (top > 0) {
+        top = 0;
+      }
+      _headerOffsetVM.top = top;
 
       if (upward) {
         if (_isUserAction) {
@@ -98,11 +99,8 @@ class RefreshState extends State<Refresh> with SingleTickerProviderStateMixin {
           _headerUserActionRun(fitOffset);
         }
       }
-    } else if (offset == 0) {
-      if (_headerBuilderVM.on == RefreshOn.before && _isUserAction == false) {
-        _isInProcess = false;
-        _isCompleted = false;
-      }
+    } else {
+      _endProcessIfPossible();
     }
   }
 
@@ -111,13 +109,13 @@ class RefreshState extends State<Refresh> with SingleTickerProviderStateMixin {
     // TODO: implement initState
     super.initState();
 
-    _headerBuilderVM = LoadMoreHeaderBuilderVM();
-    _headerOffsetVM = LoadMoreHeaderOffsetVM();
+    _headerBuilderVM = RefreshHeaderBuilderVM();
+    _headerOffsetVM = RefreshHeaderPositionVM(-widget.headerLoadingOffset);
 
     if (widget.initRefresh) {
       _isInProcess = true;
       _headerBuilderVM.on = RefreshOn.loading;
-      _headerOffsetVM.offset = widget.headerLoadingOffset;
+      _headerOffsetVM.top = 0;
     }
   }
 
@@ -132,10 +130,7 @@ class RefreshState extends State<Refresh> with SingleTickerProviderStateMixin {
             onPointerUp: (detail) {
               _isUserAction = false;
 
-              if (_isCompleted && _isInProcess && _lastOffset == 0) {
-                _isInProcess = false;
-                _isCompleted = false;
-              }
+              _endProcessIfPossible();
 
               if (_headerBuilderVM.on == RefreshOn.ready) {
                 _headerBuilderVM.on = RefreshOn.loading;
@@ -149,7 +144,7 @@ class RefreshState extends State<Refresh> with SingleTickerProviderStateMixin {
           create: (ctx) {
             return _headerBuilderVM;
           },
-          child: Consumer(builder: (ctx, LoadMoreHeaderBuilderVM vm, child) {
+          child: Consumer(builder: (ctx, RefreshHeaderBuilderVM vm, child) {
             Widget child;
             if (vm.on == RefreshOn.before) {
               child = _headerBeforeDispaly();
@@ -167,13 +162,9 @@ class RefreshState extends State<Refresh> with SingleTickerProviderStateMixin {
                 return _headerOffsetVM;
               },
               child: Consumer(
-                builder: (ctx, LoadMoreHeaderOffsetVM offsetVM, reChild) {
-                  double bottom = widget.headerLoadingOffset - offsetVM.offset;
-                  if (bottom < 0) {
-                    bottom = 0;
-                  }
+                builder: (ctx, RefreshHeaderPositionVM vm, reChild) {
                   return Positioned(
-                    top: -bottom,
+                    top: vm.top,
                     child: Container(
 //                        color: Colors.grey,
                       height: widget.headerLoadingOffset,
@@ -188,6 +179,16 @@ class RefreshState extends State<Refresh> with SingleTickerProviderStateMixin {
         ),
       ],
     );
+  }
+
+  _endProcessIfPossible() {
+    if (_isUserAction == false &&
+        _lastOffset >= 0 &&
+        _isInProcess == true &&
+        _isCompleted == true) {
+      _isInProcess = false;
+      _isCompleted = false;
+    }
   }
 
   _headerUserActionRun(double fitOffset) {
@@ -289,18 +290,20 @@ class RefreshState extends State<Refresh> with SingleTickerProviderStateMixin {
   }
 }
 
-class LoadMoreHeaderOffsetVM extends ChangeNotifier {
-  double _offset = 0;
+class RefreshHeaderPositionVM extends ChangeNotifier {
+  double _top;
 
-  double get offset => _offset;
+  double get top => _top;
 
-  set offset(double offset) {
-    _offset = offset;
+  set top(double offset) {
+    _top = offset;
     notifyListeners();
   }
+
+  RefreshHeaderPositionVM(this._top);
 }
 
-class LoadMoreHeaderBuilderVM extends ChangeNotifier {
+class RefreshHeaderBuilderVM extends ChangeNotifier {
   RefreshOn _on = RefreshOn.before;
 
   RefreshOn get on => _on;

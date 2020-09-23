@@ -34,8 +34,8 @@ class LoadMore extends StatefulWidget {
 class LoadMoreState extends State<LoadMore>
     with SingleTickerProviderStateMixin {
   LoadMoreFooterBuilderVM _footerBuilderVM;
-  LoadMoreFooterOffsetVM _footerOffsetVM;
-  LoadMoreChildPaddingVM _paddingVM;
+  LoadMoreFooterPaddingVM _footerPaddingVM;
+  LoadMoreChildPaddingVM _childPaddingVM;
   bool _isUserAction = false;
   double _lastOffset = 0;
   double _maxOffset = 0;
@@ -44,31 +44,24 @@ class LoadMoreState extends State<LoadMore>
 
   ///hasMore是否有数据更新
   endLoadMore(bool hasMore) {
-    print(hasMore);
     if (_footerBuilderVM.on == LoadMoreOn.loading) {
       if (hasMore) {
         _footerBuilderVM.on = LoadMoreOn.hasMore;
         Future.delayed(
             widget.needShowHasMoreFooter ? Duration(seconds: 1) : Duration.zero,
             () {
-          _paddingVM.bottom = 0;
+          _childPaddingVM.bottom = 0;
           _resetFooter();
           _isCompleted = true;
-          if (_lastOffset == _maxOffset && _isUserAction == false) {
-            _isInProcess = false;
-            _isCompleted = false;
-          }
+          _endProcessIfPossible();
         });
       } else {
         _footerBuilderVM.on = LoadMoreOn.noMore;
         Future.delayed(Duration(seconds: 1), () {
           _resetFooter();
-          _paddingVM.bottom = 0;
+          _childPaddingVM.bottom = 0;
           _isCompleted = true;
-          if (_lastOffset == _maxOffset && _isUserAction == false) {
-            _isInProcess = false;
-            _isCompleted = false;
-          }
+          _endProcessIfPossible();
         });
       }
     }
@@ -97,7 +90,12 @@ class LoadMoreState extends State<LoadMore>
       if (fitOffset <= 0) {
         return;
       }
-      _footerOffsetVM.offset = fitOffset;
+
+      double top = widget.footerLoadingOffset - fitOffset;
+      if (top < 0) {
+        top = 0;
+      }
+      _footerPaddingVM.top = top;
 
       if (upward) {
         if (_isUserAction) {
@@ -110,11 +108,8 @@ class LoadMoreState extends State<LoadMore>
           _footerUserActionRun(fitOffset);
         }
       }
-    } else if (offset <= maxOffset) {
-      if (_footerBuilderVM.on == LoadMoreOn.before && _isUserAction == false) {
-        _isInProcess = false;
-        _isCompleted = false;
-      }
+    } else {
+      _endProcessIfPossible();
     }
   }
 
@@ -124,8 +119,8 @@ class LoadMoreState extends State<LoadMore>
     super.initState();
 
     _footerBuilderVM = LoadMoreFooterBuilderVM();
-    _footerOffsetVM = LoadMoreFooterOffsetVM();
-    _paddingVM = LoadMoreChildPaddingVM();
+    _footerPaddingVM = LoadMoreFooterPaddingVM(widget.footerLoadingOffset);
+    _childPaddingVM = LoadMoreChildPaddingVM();
   }
 
   @override
@@ -157,19 +152,15 @@ class LoadMoreState extends State<LoadMore>
                 }
                 return ChangeNotifierProvider(
                   create: (ctx) {
-                    return _footerOffsetVM;
+                    return _footerPaddingVM;
                   },
                   child: Consumer(
-                    builder: (ctx, LoadMoreFooterOffsetVM offsetVM, reChild) {
-                      double top = widget.footerLoadingOffset - offsetVM.offset;
-                      if (top < 0) {
-                        top = 0;
-                      }
+                    builder: (ctx, LoadMoreFooterPaddingVM offsetVM, reChild) {
                       return Container(
 //                        color: Colors.grey,
                         height: widget.footerLoadingOffset,
                         child: Padding(
-                          padding: EdgeInsets.only(top: top),
+                          padding: EdgeInsets.only(top: offsetVM.top),
                           child: reChild,
                         ),
                       );
@@ -188,14 +179,13 @@ class LoadMoreState extends State<LoadMore>
             onPointerUp: (detail) {
               _isUserAction = false;
 
-              if (_isCompleted && _isInProcess && _lastOffset <= _maxOffset) {
-                _isInProcess = false;
-                _isCompleted = false;
+              if (_lastOffset + widget.footerLoadingOffset <= _maxOffset) {
+                _endProcessIfPossible();
               }
 
               if (_footerBuilderVM.on == LoadMoreOn.ready) {
                 _footerBuilderVM.on = LoadMoreOn.loading;
-                _paddingVM.bottom = widget.footerLoadingOffset;
+                _childPaddingVM.bottom = widget.footerLoadingOffset;
                 if (widget.onBeginLoadMore != null) {
                   widget.onBeginLoadMore();
                 }
@@ -203,7 +193,7 @@ class LoadMoreState extends State<LoadMore>
             },
             child: ChangeNotifierProvider(
               create: (ctx) {
-                return _paddingVM;
+                return _childPaddingVM;
               },
               child: Consumer(
                 builder: (ctx, LoadMoreChildPaddingVM vm, child) {
@@ -219,10 +209,20 @@ class LoadMoreState extends State<LoadMore>
     );
   }
 
+  _endProcessIfPossible() {
+    if (_isUserAction == false &&
+        _lastOffset <= _maxOffset &&
+        _isInProcess == true &&
+        _isCompleted == true) {
+      _isInProcess = false;
+      _isCompleted = false;
+    }
+  }
+
   _resetFooter() {
     _footerBuilderVM.on = LoadMoreOn.before;
-    if (_footerOffsetVM.offset != 0) {
-      _footerOffsetVM.offset = 0;
+    if (_footerPaddingVM.top != widget.footerLoadingOffset) {
+      _footerPaddingVM.top = widget.footerLoadingOffset;
     }
   }
 
@@ -280,15 +280,17 @@ class LoadMoreState extends State<LoadMore>
   }
 }
 
-class LoadMoreFooterOffsetVM extends ChangeNotifier {
-  double _offset = 0;
+class LoadMoreFooterPaddingVM extends ChangeNotifier {
+  double _top;
 
-  double get offset => _offset;
+  double get top => _top;
 
-  set offset(double offset) {
-    _offset = offset;
+  set top(double offset) {
+    _top = offset;
     notifyListeners();
   }
+
+  LoadMoreFooterPaddingVM(this._top);
 }
 
 class LoadMoreFooterBuilderVM extends ChangeNotifier {
