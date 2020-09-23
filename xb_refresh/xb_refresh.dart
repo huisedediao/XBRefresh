@@ -21,6 +21,7 @@ class XBRefresh extends StatefulWidget {
   final double footerLoadingOffset;
   final bool needRefresh;
   final bool needLoadMore;
+  final bool initRefresh;
 
   XBRefresh(
       {@required this.child,
@@ -41,6 +42,7 @@ class XBRefresh extends StatefulWidget {
       this.footerLoadingOffset = 50.0,
       this.needRefresh = true,
       this.needLoadMore = true,
+      this.initRefresh = false,
       Key key})
       : super(key: key);
 
@@ -89,6 +91,7 @@ class XBRefreshState extends State<XBRefresh> {
   _buildRefresh(Widget child) {
     return Refresh(
       key: _refreshKey,
+      initRefresh: widget.initRefresh,
       onBeginRefresh: widget.onBeginRefresh,
       headerBeforeBuilder: widget.headerBeforeBuilder,
       headerReadyBuilder: widget.headerReadyBuilder,

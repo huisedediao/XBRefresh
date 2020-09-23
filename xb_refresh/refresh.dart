@@ -12,19 +12,23 @@ class Refresh extends StatefulWidget {
   final XBRefreshBuilder headerCompleteBuilder;
   final bool needShowComplete;
 
+  ///初始状态要不要显示正在刷新
+  final bool initRefresh;
+
   ///大于这个值可以刷新,也用于限制header的高度
   final double headerLoadingOffset;
 
   Refresh(
       {this.child,
-        this.onBeginRefresh,
-        this.headerBeforeBuilder,
-        this.headerReadyBuilder,
-        this.headerLoadingBuilder,
-        this.headerCompleteBuilder,
-        this.headerLoadingOffset = 60.0,
-        this.needShowComplete = false,
-        Key key})
+      this.onBeginRefresh,
+      this.headerBeforeBuilder,
+      this.headerReadyBuilder,
+      this.headerLoadingBuilder,
+      this.headerCompleteBuilder,
+      this.headerLoadingOffset = 60.0,
+      this.needShowComplete = false,
+      this.initRefresh = false,
+      Key key})
       : super(key: key);
 
   @override
@@ -109,6 +113,12 @@ class RefreshState extends State<Refresh> with SingleTickerProviderStateMixin {
 
     _headerBuilderVM = LoadMoreHeaderBuilderVM();
     _headerOffsetVM = LoadMoreHeaderOffsetVM();
+
+    if (widget.initRefresh) {
+      _isInProcess = true;
+      _headerBuilderVM.on = RefreshOn.loading;
+      _headerOffsetVM.offset = widget.headerLoadingOffset;
+    }
   }
 
   @override
