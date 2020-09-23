@@ -179,7 +179,8 @@ class LoadMoreState extends State<LoadMore>
             onPointerUp: (detail) {
               _isUserAction = false;
 
-              if (_lastOffset + widget.footerLoadingOffset <= _maxOffset) {
+              ///maxOffset为0说明是数据没有填满一屏幕的情况
+              if (_lastOffset + widget.footerLoadingOffset <= _maxOffset || _maxOffset == 0) {
                 _endProcessIfPossible();
               }
 
