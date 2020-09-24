@@ -47,16 +47,14 @@ class RefreshState extends State<Refresh> with SingleTickerProviderStateMixin {
   ///结束刷新
   endRefresh() {
     if (_headerBuilderVM.on == RefreshOn.loading) {
-      _headerBuilderVM.on = RefreshOn.complete;
-      Future.delayed(
-          widget.needShowComplete ? Duration(seconds: 1) : Duration.zero, () {
-        _headerBuilderVM.on = RefreshOn.before;
-        if (_headerOffsetVM.top != -widget.headerLoadingOffset) {
-          _headerOffsetVM.top = -widget.headerLoadingOffset;
-        }
-        _isCompleted = true;
-        _endProcessIfPossible();
-      });
+      if (widget.needShowComplete) {
+        _headerBuilderVM.on = RefreshOn.complete;
+        Future.delayed(Duration(seconds: 1), () {
+          _afterComplete();
+        });
+      } else {
+        _afterComplete();
+      }
     }
   }
 
@@ -179,6 +177,15 @@ class RefreshState extends State<Refresh> with SingleTickerProviderStateMixin {
         ),
       ],
     );
+  }
+
+  _afterComplete() {
+    _headerBuilderVM.on = RefreshOn.before;
+    if (_headerOffsetVM.top != -widget.headerLoadingOffset) {
+      _headerOffsetVM.top = -widget.headerLoadingOffset;
+    }
+    _isCompleted = true;
+    _endProcessIfPossible();
   }
 
   _endProcessIfPossible() {

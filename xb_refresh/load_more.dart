@@ -46,15 +46,14 @@ class LoadMoreState extends State<LoadMore>
   endLoadMore(bool hasMore) {
     if (_footerBuilderVM.on == LoadMoreOn.loading) {
       if (hasMore == true) {
-        _footerBuilderVM.on = LoadMoreOn.hasMore;
-        Future.delayed(
-            widget.needShowHasMoreFooter ? Duration(seconds: 1) : Duration.zero,
-            () {
-          _childPaddingVM.bottom = 0;
-          _resetFooter();
-          _isCompleted = true;
-          _endProcessIfPossible();
-        });
+        if (widget.needShowHasMoreFooter) {
+          _footerBuilderVM.on = LoadMoreOn.hasMore;
+          Future.delayed(Duration(seconds: 1), () {
+            _afterHasMore();
+          });
+        } else {
+          _afterHasMore();
+        }
       } else {
         _footerBuilderVM.on = LoadMoreOn.noMore;
         Future.delayed(Duration(seconds: 1), () {
@@ -180,7 +179,8 @@ class LoadMoreState extends State<LoadMore>
               _isUserAction = false;
 
               ///maxOffset为0说明是数据没有填满一屏幕的情况
-              if (_lastOffset + widget.footerLoadingOffset <= _maxOffset || _maxOffset == 0) {
+              if (_lastOffset + widget.footerLoadingOffset <= _maxOffset ||
+                  _maxOffset == 0) {
                 _endProcessIfPossible();
               }
 
@@ -208,6 +208,13 @@ class LoadMoreState extends State<LoadMore>
             )),
       ],
     );
+  }
+
+  _afterHasMore() {
+    _childPaddingVM.bottom = 0;
+    _resetFooter();
+    _isCompleted = true;
+    _endProcessIfPossible();
   }
 
   _endProcessIfPossible() {
