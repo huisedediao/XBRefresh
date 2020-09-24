@@ -243,48 +243,68 @@ class LoadMoreState extends State<LoadMore>
   }
 
   Widget _footerBeforeDispaly() {
-    if (widget.footerBeforeBuilder != null)
-      return widget.footerBeforeBuilder(widget.footerLoadingOffset);
+    Widget child;
+    if (widget.footerBeforeBuilder != null) {
+      child = widget.footerBeforeBuilder(widget.footerLoadingOffset);
+    } else {
+      child = Text("上拉加载更多");
+    }
     return Container(
         alignment: Alignment.center,
         height: widget.footerLoadingOffset,
-        child: Text("上拉加载更多"));
+        child: child);
   }
 
   Widget _footerReadyDispaly() {
-    if (widget.footerReadyBuilder != null)
-      return widget.footerReadyBuilder(widget.footerLoadingOffset);
+    Widget child;
+    if (widget.footerReadyBuilder != null) {
+      child = widget.footerReadyBuilder(widget.footerLoadingOffset);
+    } else {
+      child = Text("松开手开始加载");
+    }
     return Container(
         alignment: Alignment.center,
         height: widget.footerLoadingOffset,
-        child: Text("松开手开始加载"));
+        child: child);
   }
 
   Widget _footerLoadingDispaly() {
-    if (widget.footerLoadingBuilder != null)
-      return widget.footerLoadingBuilder(widget.footerLoadingOffset);
+    Widget child;
+    if (widget.footerLoadingBuilder != null) {
+      child = widget.footerLoadingBuilder(widget.footerLoadingOffset);
+    } else {
+      child = Text("正在加载");
+    }
     return Container(
         alignment: Alignment.center,
         height: widget.footerLoadingOffset,
-        child: Text("正在加载"));
+        child: child);
   }
 
   Widget _footerHasMoreDispaly() {
-    if (widget.footerHasMoreBuilder != null)
-      return widget.footerHasMoreBuilder(widget.footerLoadingOffset);
+    Widget child;
+    if (widget.footerHasMoreBuilder != null) {
+      child = widget.footerHasMoreBuilder(widget.footerLoadingOffset);
+    } else {
+      child = Text("加载完成");
+    }
     return Container(
         alignment: Alignment.center,
         height: widget.footerLoadingOffset,
-        child: Text("加载完成"));
+        child: child);
   }
 
   Widget _footerNoMoreDispaly() {
-    if (widget.footerNoMoreBuilder != null)
-      return widget.footerNoMoreBuilder(widget.footerLoadingOffset);
+    Widget child;
+    if (widget.footerNoMoreBuilder != null) {
+      child = widget.footerNoMoreBuilder(widget.footerLoadingOffset);
+    } else {
+      child = Text("没有新数据啦~");
+    }
     return Container(
         alignment: Alignment.center,
         height: widget.footerLoadingOffset,
-        child: Text("没有新数据啦~"));
+        child: child);
   }
 }
 
