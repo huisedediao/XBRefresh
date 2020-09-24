@@ -45,7 +45,7 @@ class LoadMoreState extends State<LoadMore>
   ///hasMore是否有数据更新
   endLoadMore(bool hasMore) {
     if (_footerBuilderVM.on == LoadMoreOn.loading) {
-      if (hasMore) {
+      if (hasMore == true) {
         _footerBuilderVM.on = LoadMoreOn.hasMore;
         Future.delayed(
             widget.needShowHasMoreFooter ? Duration(seconds: 1) : Duration.zero,
